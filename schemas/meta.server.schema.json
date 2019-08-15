@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "filename": {
+      "type": "string",
+      "minLength": 1
+    },
+    "metadata": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(?!^owner$).*$"
+      },
+      "minProperties": 1
+    }
+  },
+  "additionalProperties": false
+}

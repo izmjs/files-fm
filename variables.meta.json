@@ -1,0 +1,37 @@
+{
+  "UPLOADER_MAX_SIZE": {
+    "name": "Uploader Max Size",
+    "defaultValue": 52428800,
+    "scope": "files-manager",
+    "schema": {
+      "type": "integer"
+    }
+  },
+  "UPLOADER_ACCEPT": {
+    "name": "Accpeted mime types",
+    "description": "You can specify multiple mime types separating them by ','",
+    "defaultValue": "*/*",
+    "scope": "files-manager"
+  },
+  "BUCKET": {
+    "name": "Bucket name",
+    "defaultValue": "fs",
+    "scope": "files-manager"
+  },
+  "DEFAULT_VISIBILITY": {
+    "name": "Default visibility",
+    "description": "Specify the default visibility option. Public: Guests can see the file. Internal: Only authenticated users can see the file. Private: No one except the owner can see the file.",
+    "schema": {
+      "type": "string",
+      "enum": ["private", "internal", "public"]
+    },
+    "defaultValue": "private",
+    "scope": "files-manager"
+  },
+  "UNASSIGNED_ACCESS": {
+    "name": "Roles who can access unassigned files",
+    "description": "Roles must be separated by ','",
+    "defaultValue": "user",
+    "scope": "files-manager"
+  }
+}

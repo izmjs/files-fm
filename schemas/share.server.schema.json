@@ -1,0 +1,19 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "user": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{24}$"
+      },
+      "role": {
+        "type": "string"
+      },
+      "canEdit": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  }
+}
