@@ -76,7 +76,7 @@ filesSchema.methods.canAccess = async function canAccess(user = null) {
   }
 
   if (!metadata || !metadata.owner) {
-    const result = unassignedAccess.filter(r => roles.includes(r));
+    const result = unassignedAccess.filter((r) => roles.includes(r));
     return result.length > 0;
   }
 
@@ -159,7 +159,7 @@ filesSchema.statics.list = function list(user = null) {
   });
 
   // Add unassigned files
-  const isInUnassignedAccess = unassignedAccess.filter(r => roles.includes(r));
+  const isInUnassignedAccess = unassignedAccess.filter((r) => roles.includes(r));
   if (isInUnassignedAccess.length > 0) {
     ORs.push({
       'metada.owner': null,

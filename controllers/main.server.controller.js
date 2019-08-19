@@ -214,7 +214,7 @@ exports.fileById = async function getById(req, res, next, id) {
  * @param {OutcommingMessage} res The response
  * @param {Function} next Go to the next middleware
  */
-exports.download = isDownload => async function download(req, res) {
+exports.download = (isDownload) => async function download(req, res) {
   const { gridFile: f } = req;
   const { _id: id } = f;
 
@@ -252,7 +252,7 @@ exports.uploadFile = async function uploadFile(req, res) {
 exports.multer = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const result = accept.find(one => minimatch(file.mimetype, one));
+    const result = accept.find((one) => minimatch(file.mimetype, one));
     return cb(null, !!result);
   },
 }, uploader).any();
@@ -270,7 +270,7 @@ exports.share = async function share(req, res, next) {
 
   gridFile.set('metadata', {
     ...gridFile.metadata.toJSON(),
-    share: body.map(s => ({
+    share: body.map((s) => ({
       ...s,
       by: uId,
     })),
