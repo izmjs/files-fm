@@ -1,12 +1,11 @@
-// eslint-disable-next-line
-const { validate } = require('utils');
+const { validate } = require('@helpers/utils');
 
 const ctrl = require('../controllers/main.server.controller');
 const metaSchema = require('../schemas/meta.server.schema');
 const shareSchema = require('../schemas/share.server.schema');
 
 module.exports = {
-  prefix: '/files-manager/files',
+  prefix: '/files',
   params: [{
     name: 'fileID',
     middleware: ctrl.fileById,
@@ -17,10 +16,11 @@ module.exports = {
       /**
        * @bodyMode formdata
        *
-       * @body
+       * @formdata
        * [{
        *   "key": "files",
-       *   "type": "file"
+       *   "type": "file",
+       *   "description": "List of files to upload"
        * }]
        *
        * @headers
@@ -32,8 +32,8 @@ module.exports = {
         title: 'Upload files',
         description: 'Upload files',
         groups: [],
-        parents: ['modules:files-manager'],
-        iam: 'modules:files-manager:upload',
+        parents: ['modules:files', 'modules:files:main'],
+        iam: 'modules:files:main:upload',
         middlewares: [
           ctrl.multer,
           ctrl.upload,
@@ -70,11 +70,11 @@ module.exports = {
         title: 'List files',
         description: 'List files',
         groups: [],
-        parents: ['modules:files-manager'],
+        parents: ['modules:files', 'modules:files:main'],
         middlewares: [
           ctrl.list,
         ],
-        iam: 'modules:files-manager:list',
+        iam: 'modules:files:main:list',
       },
     },
   }, {
@@ -84,12 +84,12 @@ module.exports = {
         title: 'Get file metadata',
         description: 'Get a file metadata',
         groups: [],
-        parents: ['modules:files-manager'],
+        parents: ['modules:files', 'modules:files:main'],
         middlewares: [
           ctrl.canAccess,
           ctrl.one,
         ],
-        iam: 'modules:files-manager:meta:get',
+        iam: 'modules:files:main:meta:get',
       },
       /**
        * @body
@@ -101,24 +101,24 @@ module.exports = {
         title: 'Edit file metadata',
         description: 'Edit file metadata',
         groups: [],
-        parents: ['modules:files-manager'],
+        parents: ['modules:files', 'modules:files:main'],
         middlewares: [
           validate(metaSchema),
           ctrl.canEdit,
           ctrl.meta,
         ],
-        iam: 'modules:files-manager:meta:edit',
+        iam: 'modules:files:main:meta:edit',
       },
       delete: {
         title: 'Remove file',
         description: 'Remove a specific file',
         groups: [],
-        parents: ['modules:files-manager'],
+        parents: ['modules:files', 'modules:files:main'],
         middlewares: [
           ctrl.canEdit,
           ctrl.remove,
         ],
-        iam: 'modules:files-manager:delete',
+        iam: 'modules:files:main:delete',
       },
     },
   }, {
@@ -128,12 +128,12 @@ module.exports = {
         title: 'Download file',
         description: 'Download a specific file',
         groups: [],
-        parents: ['modules:files-manager'],
+        parents: ['modules:files', 'modules:files:main'],
         middlewares: [
           ctrl.canAccess,
           ctrl.download(true),
         ],
-        iam: 'modules:files-manager:download',
+        iam: 'modules:files:main:download',
       },
     },
   }, {
@@ -143,12 +143,12 @@ module.exports = {
         title: 'View file',
         description: 'View a specific file',
         groups: [],
-        parents: ['modules:files-manager'],
+        parents: ['modules:files', 'modules:files:main'],
         middlewares: [
           ctrl.canAccess,
           ctrl.download(false),
         ],
-        iam: 'modules:files-manager:view',
+        iam: 'modules:files:main:view',
       },
     },
   }, {
@@ -168,13 +168,13 @@ module.exports = {
         title: 'Share file',
         description: 'Share a specific file',
         groups: [],
-        parents: ['modules:files-manager'],
+        parents: ['modules:files', 'modules:files:main'],
         middlewares: [
           validate(shareSchema),
           ctrl.canEdit,
           ctrl.share,
         ],
-        iam: 'modules:files-manager:share',
+        iam: 'modules:files:main:share',
       },
     },
   }, {
@@ -184,12 +184,12 @@ module.exports = {
         title: 'Stop file sharing',
         description: 'Unshare a specific file',
         groups: [],
-        parents: ['modules:files-manager'],
+        parents: ['modules:files', 'modules:files:main'],
         middlewares: [
           ctrl.canEdit,
           ctrl.unshare,
         ],
-        iam: 'modules:files-manager:unshare',
+        iam: 'modules:files:main:unshare',
       },
     },
   }],
