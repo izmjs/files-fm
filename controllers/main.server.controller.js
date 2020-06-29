@@ -120,7 +120,7 @@ exports.canEdit = async function canEdit(req, res, next) {
  * @param {Function} next Go to the next middleware
  */
 exports.upload = async function upload(req, res) {
-  res.json(req.files);
+  res.status(201).json(req.files);
 };
 
 /**
