@@ -8,7 +8,7 @@
     "metadata": {
       "type": "object",
       "propertyNames": {
-        "pattern": "^(?!^owner$).*$"
+        "pattern": "^(?!^owner|visibility|share$).*$"
       },
       "minProperties": 1
     }
