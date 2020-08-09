@@ -1,7 +1,4 @@
-/* eslint-env node, mocha */
-/* eslint-disable import/no-dynamic-require */
 const request = require('supertest');
-const { resolve } = require('path');
 const { model, connection } = require('mongoose');
 const {
   it,
@@ -12,10 +9,10 @@ const {
 
 const User = model('User');
 
-const { createUser } = require(resolve('helpers/utils'));
+const { createUser } = require('@helpers/utils');
 
-const express = require(resolve('./config/lib/express'));
-const { prefix } = require(resolve('config'));
+const express = require('@config/lib/express');
+const { prefix } = require('@config/index').app;
 
 let app;
 const credentials = {
@@ -27,32 +24,32 @@ let agent;
 /**
  * Sections tests
  */
-describe('tests for module "files-manager"', () => {
+describe('tests for module "files"', () => {
   before(async () => {
     // Get application
     app = await express.init(connection.db);
     agent = request.agent(app);
   });
 
-  describe('"files-manager" is up', () => {
-    it('I am not allowed to call the API if I do not have the IAM "files-manager:ok"', async () => {
+  describe('"files" is up', () => {
+    it('I am not allowed to call the API if I do not have the IAM "modules:files:main:list"', async () => {
       await createUser(credentials, []);
       await agent.post('/api/v1/auth/signin').send(credentials).expect(200);
-      await agent.get(`${prefix}/files-manager/files`).expect(403);
+      await agent.get(`${prefix}/files`).expect(403);
     });
 
-    it('I am allowed to call the API if I have the IAM "files-manager:ok"', async () => {
+    it('I am allowed to call the API if I have the IAM "modules:files:main:list"', async () => {
       await createUser(credentials, [
-        'modules:files-manager:list',
+        'modules:files:main:list',
       ]);
       await agent.post('/api/v1/auth/signin').send(credentials).expect(200);
-      await agent.get(`${prefix}/files-manager/files`).expect(200);
+      await agent.get(`${prefix}/files`).expect(200);
     });
   });
 
   afterEach(async () => {
     await Promise.all([
-      User.remove(),
+      User.deleteMany(),
     ]);
   });
 });

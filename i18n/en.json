@@ -3,5 +3,7 @@
   "NOTHING_TO_UPLOAD": "Liste des fichier est vide",
   "FILE_NOT_FOUND": "The specified file was not found",
   "UNAUTHORIZED_TO_VIEW": "Not authorized to view this file",
-  "UNAUTHORIZED_TO_EDIT": "Not authorized to edit this file"
+  "UNAUTHORIZED_TO_EDIT": "Not authorized to edit this file",
+  "FILE_WITH_NO_EXT": "The uploaded file was not recognized",
+  "MIME_NOT_ACCEPTED": "The mime type {{mime}} is not accepted"
 }

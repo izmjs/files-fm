@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "visibility": {
+      "type": "string"
+    },
+    "file64": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

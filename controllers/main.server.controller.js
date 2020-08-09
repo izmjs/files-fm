@@ -1,22 +1,13 @@
-const {
-  mongo,
-  model,
-  Types,
-  connection,
-} = require('mongoose');
+const { mongo, model, Types, connection } = require('mongoose');
 const { promisify } = require('util');
-const { resolve } = require('path');
 const multer = require('multer');
 const multerStorage = require('multer-gridfs-storage');
 const minimatch = require('minimatch');
+const fileType = require('file-type');
 
-// eslint-disable-next-line import/no-dynamic-require
-const { filesManager } = require(resolve('./config'));
-const {
-  bucket,
-  accept = [],
-  uploader,
-} = filesManager;
+const { filesManager } = require('@config/index');
+
+const { bucket, accept = [], uploader } = filesManager;
 const Grid = model('FMFiles');
 
 const gfs = new mongo.GridFSBucket(connection.db, {
@@ -32,8 +23,8 @@ const storage = multerStorage({
     bucketName: filesManager.bucket,
     metadata: {
       owner: req.user
-        // eslint-disable-next-line no-underscore-dangle
-        ? req.user._id
+        ? // eslint-disable-next-line
+          req.user._id
         : null,
     },
   }),
@@ -50,9 +41,7 @@ exports.list = async function list(req, res, next) {
   const { $top: top, $skip: skip } = req.query;
 
   try {
-    const result = await Grid
-      .list(req.user)
-      .paginate({ top, skip });
+    const result = await Grid.list(req.user).paginate({ top, skip });
 
     return res.json(result);
   } catch (e) {
@@ -113,14 +102,119 @@ exports.canEdit = async function canEdit(req, res, next) {
 };
 
 /**
+ * upload base64 file(s)
+ * @controller upload64
+ * @param {IncommingMessage} req The request
+ * @param {OutcommingMessage} res The response
+ * @param {Function} next Go to the next middleware
+ */
+exports.upload64 = async function upload64(req, res, next) {
+  let { file64 = [] } = req.body;
+  const { user = {} } = req;
+  const { _id: userId } = user;
+
+  if (!Array.isArray(file64)) {
+    file64 = [file64];
+  }
+
+  const uploaded64 = await Promise.all(
+    file64.map((oneFile) => {
+      const file = Buffer.from(oneFile, 'base64');
+
+      return fileType.fromBuffer(file).then((fType = {}) => {
+        const { ext, mime } = fType;
+
+        if (!ext) {
+          return {
+            error: req.t('FILE_WITH_NO_EXT'),
+          };
+        }
+
+        const matchMime = accept.find((one) => minimatch(mime, one));
+
+        if (!matchMime) {
+          return {
+            error: req.t('MIME_NOT_ACCEPTED', { mime }),
+          };
+        }
+
+        return new Promise((resolve) => {
+          const uploadStream = gfs.openUploadStream(`file.${ext}`, {
+            metadata: {
+              owner: userId,
+              visibility: req.body.visibility,
+            },
+            contentType: mime,
+          });
+
+          const { id } = uploadStream;
+
+          uploadStream.once('finish', () => {
+            try {
+              return resolve(id.toString());
+            } catch (e) {
+              return resolve({
+                error: e.message,
+              });
+            }
+          });
+
+          uploadStream.write(file);
+          uploadStream.end();
+        });
+      });
+    }),
+  );
+
+  if (!req.meta) req.meta = {};
+
+  req.meta.uploaded64 = uploaded64;
+
+  return next();
+};
+
+/**
  * Upload file(s)
  * @controller Upload
  * @param {IncommingMessage} req The request
  * @param {OutcommingMessage} res The response
  * @param {Function} next Go to the next middleware
  */
-exports.upload = async function upload(req, res) {
-  res.status(201).json(req.files);
+exports.upload = async function upload(req, res, next) {
+  const { uploaded64 = [] } = req.meta;
+  let { files = [] } = req;
+  let array;
+
+  try {
+    array = await Grid.find({
+      _id: uploaded64.filter((one) => typeof one === 'string'),
+    });
+  } catch (e) {
+    return next(e);
+  }
+
+  files = array.concat(uploaded64.filter((one) => typeof one !== 'string')).concat(files);
+
+  const visibility = ['public', 'private', 'internal'].includes(req.body.visibility)
+    ? req.body.visibility
+    : 'private';
+
+  try {
+    await Grid.updateMany(
+      {
+        _id: {
+          $in: files.filter((one) => !one.error).map((one) => one.id),
+        },
+      },
+      {
+        'metadata.visibility': visibility,
+      },
+    );
+  } catch (e) {
+    // Ignore error and proceed
+  }
+
+  return res.status(201).json(files);
 };
 
 /**
@@ -214,22 +308,23 @@ exports.fileById = async function getById(req, res, next, id) {
  * @param {OutcommingMessage} res The response
  * @param {Function} next Go to the next middleware
  */
-exports.download = (isDownload) => async function download(req, res) {
-  const { gridFile: f } = req;
-  const { _id: id } = f;
+exports.download = (isDownload) =>
+  async function download(req, res) {
+    const { gridFile: f } = req;
+    const { _id: id } = f;
 
-  const stream = gfs.openDownloadStream(id);
+    const stream = gfs.openDownloadStream(id);
 
-  if (isDownload === true) {
-    res.header('Content-Type', 'application/octet-stream');
-    res.header('Content-Disposition', `attachement; filename=${encodeURI(f.get('filename'))}`);
-  } else {
-    res.header('Content-Type', f.get('contentType'));
-    res.header('Content-Disposition', `inline; filename=${encodeURI(f.get('filename'))}`);
-  }
+    if (isDownload === true) {
+      res.header('Content-Type', 'application/octet-stream');
+      res.header('Content-Disposition', `attachement; filename=${encodeURI(f.get('filename'))}`);
+    } else {
+      res.header('Content-Type', f.get('contentType'));
+      res.header('Content-Disposition', `inline; filename=${encodeURI(f.get('filename'))}`);
+    }
 
-  stream.pipe(res);
-};
+    stream.pipe(res);
+  };
 
 /**
  * Upload a file
@@ -244,18 +339,21 @@ exports.uploadFile = async function uploadFile(req, res) {
 
 /**
  * Multer
- * @controller Meuler
+ * @controller Mutler
  * @param {IncommingMessage} req The request
  * @param {OutcommingMessage} res The response
  * @param {Function} next Go to the next middleware
  */
-exports.multer = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    const result = accept.find((one) => minimatch(file.mimetype, one));
-    return cb(null, !!result);
+exports.multer = multer(
+  {
+    storage,
+    fileFilter: (req, file, cb) => {
+      const result = accept.find((one) => minimatch(file.mimetype, one));
+      return cb(null, !!result);
+    },
   },
-}, uploader).any();
+  uploader,
+).any();
 
 /**
  * Share a file
