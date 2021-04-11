@@ -17,7 +17,8 @@ const gfs = new mongo.GridFSBucket(connection.db, {
 const delete$ = promisify(gfs.delete).bind(gfs);
 
 const storage = multerStorage({
-  db: connection,
+  db: connection.db,
+  client: connection.client,
   file: (req, file) => ({
     filename: file.originalname,
     bucketName: filesManager.bucket,
