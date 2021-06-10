@@ -1,9 +1,9 @@
 const { validate } = require('@helpers/utils');
 
 const ctrl = require('../controllers/main.server.controller');
-const metaSchema = require('../schemas/meta.server.schema');
-const shareSchema = require('../schemas/share.server.schema');
-const file64Schema = require('../schemas/file64.server.schema');
+const metaSchema = require('../schemas/meta.server.schema.json');
+const shareSchema = require('../schemas/share.server.schema.json');
+const file64Schema = require('../schemas/file64.server.schema.json');
 
 module.exports = {
   prefix: '/files',
